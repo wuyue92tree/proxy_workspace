@@ -1,0 +1,13 @@
+beautifulsoup4>=4.5.3
+certifi>=2016.9.26
+configparser>=3.5.0
+Crwy>=1.0.2
+Django>=1.10.5
+django-filter>=1.0.1
+django-suit>=0.2.23
+djangorestframework>=3.5.3
+docutils>=0.13.1
+pycurl>=7.43.0
+redis>=2.10.5
+SQLAlchemy>=1.1.4
+tqdm>=4.10.0
