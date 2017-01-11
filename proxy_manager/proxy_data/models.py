@@ -57,5 +57,6 @@ class ProxyChecked(models.Model):
 
     class Meta:
         db_table = 'proxy_proxychecked'
+        unique_together = (('site', 'proxy'),)
         verbose_name = "已检测代理"
         verbose_name_plural = verbose_name

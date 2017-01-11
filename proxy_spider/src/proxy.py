@@ -151,7 +151,11 @@ class ProxySpider(Spider):
                                      connect_time=connect_time,
                                      check_time=check_time)
             self.db.session.merge(item)
-            self.db.session.commit()
+
+            try:
+                self.db.session.commit()
+            except:
+                self.db.session.rollback()
 
     def do_check(self):
         process_list = []

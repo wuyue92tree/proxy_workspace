@@ -27,7 +27,9 @@ class ProxyProxy(Base):
 
 class ProxyProxychecked(Base):
     __tablename__ = 'proxy_proxychecked'
-
+    __table_args__ = (
+        Index('proxy_proxychecked_site_id_fb66f63b_uniq', 'site_id', 'proxy_id', unique=True),
+    )
     id = Column(Integer, primary_key=True)
     connect_time = Column(String(20))
     check_time = Column(DateTime)
