@@ -13,6 +13,7 @@ import datetime
 import time
 import sys
 import multiprocessing
+from sqlalchemy.exc import IntegrityError
 from tqdm import tqdm
 from crwy.spider import Spider
 from crwy.RedisQueue import RedisQueue
@@ -70,12 +71,19 @@ class ProxySpider(Spider):
                                       type=type, io=io,
                                       live_time=live_time.decode('utf-8'),
                                       dateline=dateline)
-                    self.db.session.merge(item)
-
                     try:
+                        self.db.session.add(item)
                         self.db.session.commit()
                     except:
+                        update_={}
+                        update_['locate'] = locate.decode('utf-8')
+                        update_['level'] = level.decode('utf-8')
+                        update_['io'] = io
+                        update_['live_time'] = live_time.decode('utf-8')
+                        update_['dateline'] = dateline
                         self.db.session.rollback()
+                        self.db.session.query(ProxyProxy).filter_by(addr=addr, port=port, type=type).update(update_)
+                        self.db.session.commit()
 
             self.logger.info('%s : crawler success !!!' % get_current_function_name())
 
@@ -88,7 +96,7 @@ class ProxySpider(Spider):
                 time.sleep(2)
                 url = target_url + str(i)
                 try:
-                    html_cont = self.html_downloader.download(url)
+                    html_cont = self.html_downloader.download(url, useragent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36')
                 except pycurl.error:
                     self.logger.warning('%s : fail to access %s' % (get_current_function_name(), url))
                 try:
@@ -109,12 +117,18 @@ class ProxySpider(Spider):
                                       level=level.decode('utf-8'),
                                       type=type, io=io,
                                       dateline=dateline)
-                    self.db.session.merge(item)
-
                     try:
+                        self.db.session.add(item)
                         self.db.session.commit()
                     except:
+                        update_={}
+                        update_['locate'] = locate.decode('utf-8')
+                        update_['level'] = level.decode('utf-8')
+                        update_['io'] = io
+                        update_['dateline'] = dateline
                         self.db.session.rollback()
+                        self.db.session.query(ProxyProxy).filter_by(addr=addr, port=port, type=type).update(update_)
+                        self.db.session.commit()
 
             self.logger.info('%s : crawler success !!!' % get_current_function_name())
 
@@ -150,12 +164,16 @@ class ProxySpider(Spider):
             item = ProxyProxychecked(proxy_id=proxy_id, site_id=site_id,
                                      connect_time=connect_time,
                                      check_time=check_time)
-            self.db.session.merge(item)
-
             try:
+                self.db.session.add(item)
                 self.db.session.commit()
             except:
+                update_ = {}
+                update_['connect_time'] = connect_time
+                update_['check_time'] = check_time
                 self.db.session.rollback()
+                self.db.session.query(ProxyProxychecked).filter_by(proxy_id=proxy_id, site_id=site_id).update(update_)
+                self.db.session.commit()
 
     def do_check(self):
         process_list = []
