@@ -13,7 +13,6 @@ import datetime
 import time
 import sys
 import multiprocessing
-from sqlalchemy.exc import IntegrityError
 from tqdm import tqdm
 from crwy.spider import Spider
 from crwy.RedisQueue import RedisQueue
@@ -38,7 +37,7 @@ class ProxySpider(Spider):
     def __init__(self):
         Spider.__init__(self)
         self.spider_name = 'proxy'
-        self.logger = logging.getLogger('fileLogger')
+        self.logger = logging.getLogger('rtLogger')
         self.db = Database('sqlite:///../proxy_manager/proxy_manager/db.sqlite3',
                            encoding='utf-8')
         self.db.init_table()
