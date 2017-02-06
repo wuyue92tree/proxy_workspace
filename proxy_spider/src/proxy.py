@@ -38,7 +38,7 @@ class ProxySpider(Spider):
         Spider.__init__(self)
         self.spider_name = 'proxy'
         self.logger = logging.getLogger('rtLogger')
-        self.db = Database('sqlite:///../proxy_manager/proxy_manager/db.sqlite3',
+        self.db = Database('sqlite:///../proxy_manager/db.sqlite3',
                            encoding='utf-8')
         self.db.init_table()
 
