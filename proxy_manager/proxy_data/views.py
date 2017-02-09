@@ -7,12 +7,12 @@ from .models import Proxy, ProxyChecked
 
 
 class ProxyViewSet(viewsets.ModelViewSet):
-    queryset = Proxy.objects.all()
+    queryset = Proxy.objects.all().order_by('-dateline')
     serializer_class = ProxySerializer
     filter_fields = ('level', 'type', 'io')
 
 
 class ProxyCheckedViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ProxyChecked.objects.all()
+    queryset = ProxyChecked.objects.all().order_by('-check_time')
     serializer_class = ProxyCheckedSerializer
     filter_fields = ('site', 'proxy__io', 'proxy__level', 'proxy__type')

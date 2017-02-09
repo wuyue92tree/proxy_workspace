@@ -15,7 +15,7 @@ import sys
 import multiprocessing
 from tqdm import tqdm
 from crwy.spider import Spider
-from crwy.RedisQueue import RedisQueue
+from crwy.utils.queue.RedisQueue import RedisQueue
 from crwy.utils.sql.db import Database
 from proxy_db import *
 
