@@ -1,11 +1,7 @@
 # coding: utf-8
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
-
-
-Base = declarative_base()
-metadata = Base.metadata
+from crwy.utils.sql.db import Base
 
 
 class ProxyProxy(Base):
