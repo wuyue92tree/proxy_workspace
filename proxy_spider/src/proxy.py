@@ -10,6 +10,7 @@ import logging.config
 import pycurl
 import inspect
 import datetime
+import random
 import time
 import sys
 import multiprocessing
@@ -94,8 +95,10 @@ class ProxySpider(Spider):
             for i in tqdm(range(1, page_num), desc='[%s]' % get_current_function_name()):
                 time.sleep(2)
                 url = target_url + str(i)
+                ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36'
+                cookie = '_ydclearance=0ec9e814dbd7ce3cc5d6aaef-227b-401a-968b-c1f719c14bc5-1488430843;'
                 try:
-                    html_cont = self.html_downloader.download(url, useragent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36')
+                    html_cont = self.html_downloader.download(url, useragent=ua, cookie=cookie)
                 except pycurl.error:
                     self.logger.warning('%s : fail to access %s' % (get_current_function_name(), url))
                 try:
