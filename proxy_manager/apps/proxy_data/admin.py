@@ -10,15 +10,21 @@ from .models import *
 
 @admin.register(Proxy)
 class ProxyAdmin(admin.ModelAdmin):
-    list_display = ('addr', 'port', 'io', 'locate', 'level', 'type',
+    list_display = ('source', 'addr', 'port', 'io', 'locate', 'level', 'type',
                     'live_time', 'dateline')
-    list_filter = ('io', 'level', 'type')
+    list_filter = ('source', 'io', 'level', 'type')
     search_fields = ('addr', 'port')
+
+
+@admin.register(CheckDomain)
+class CheckDomainAdmin(admin.ModelAdmin):
+    list_display = ('domain', 'site', 'description', 'status')
+    list_filter = ('site__site_name', 'status')
 
 
 @admin.register(TargetSite)
 class TargetSiteAdmin(admin.ModelAdmin):
-    list_display = ('id', 'site', 'site_name', 'status')
+    list_display = ('site_name', 'description', 'status')
 
 
 @admin.register(ProxyChecked)

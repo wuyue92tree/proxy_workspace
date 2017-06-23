@@ -19,19 +19,14 @@ proxy_workspace
 
 依赖包
 =================================================
- * beautifulsoup4>=4.5.3
- * certifi>=2016.9.26
- * configparser>=3.5.0
- * Crwy>=1.0.2
+ * Crwy>=1.0.5
  * Django>=1.10.5
  * django-filter>=1.0.1
  * django-suit>=0.2.23
  * djangorestframework>=3.5.3
  * docutils>=0.13.1
- * pycurl>=7.43.0
  * redis>=2.10.5
  * SQLAlchemy>=1.1.4
- * tqdm>=4.10.0
 
 初始化proxy_manager
 =================================================
@@ -46,7 +41,8 @@ proxy_workspace
 执行爬虫proxy_spider
 =================================================
 
-- 抓取免费代理：crwy runspider -n proxy get;
+- 抓取免费西刺代理：crwy runspider -n proxy xici;
+- 抓取免费快代理：crwy runspider -n proxy kuai;
 - 检测代理有效性：crwy runspider -n check;
 
 注意事项
@@ -54,3 +50,10 @@ proxy_workspace
 
  1. 爬虫检测时依赖于redis服务器，请自行安装；
  2. 可将爬虫爬取和检测设置为定时任务，请自行脑补^_^。
+
+修改日志
+===================
+
+2017-06-23
+
+- 调整代理获取整体结构/检测代理接口暂时停止使用。

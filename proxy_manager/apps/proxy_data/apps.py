@@ -4,4 +4,4 @@ from django.apps import AppConfig
 
 
 class ProxyDataConfig(AppConfig):
-    name = 'proxy_data'
+    name = 'proxy_workspace.proxy_manager.apps.proxy_data'

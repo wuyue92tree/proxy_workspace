@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'proxy_data',
+    'proxy_manager.apps.proxy_data',
+    'django_filters',
     'rest_framework',
 ]
 
@@ -118,7 +119,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -131,7 +132,16 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 SUIT_CONFIG = {
     'ADMIN_NAME': u'代理后台管理',
     'MENU': (
-        {'app': 'proxy_data', 'label': u'代理管理'},
+        {
+            'app': 'proxy_data',
+            'label': u'代理管理',
+            'models': (
+                'proxy',
+                'proxychecked',
+                'checkdomain',
+                'targetsite'
+            )
+        },
         'sites',
         'auth',
     ),
