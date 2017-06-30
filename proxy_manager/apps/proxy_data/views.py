@@ -15,5 +15,6 @@ class ProxyViewSet(viewsets.ModelViewSet):
 class ProxyCheckedViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ProxyChecked.objects.all().order_by('-check_time')
     serializer_class = ProxyCheckedSerializer
-    filter_fields = ('site', 'proxy__io', 'proxy__level', 'proxy__type',
+    filter_fields = ('domain__domain', 'proxy__io', 'proxy__level',
+                     'proxy__type',
                      'proxy__source')

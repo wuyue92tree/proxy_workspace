@@ -4,28 +4,21 @@
 
 from rest_framework import serializers
 from .models import Proxy, ProxyChecked
-
+from crwy.spider import Spider
 
 class ProxySerializer(serializers.HyperlinkedModelSerializer):
-    io = serializers.SerializerMethodField()
-
     class Meta:
         model = Proxy
         # fields = '__all__'
-        exclude = ('url',)
-
-    def get_io(self, obj):
-        if obj.io == 2:
-            return u'国外'
-        else:
-            return u'国内'
+        exclude = ('url', 'level', 'source', 'io', 'type', 'locate',
+                   'live_time', 'dateline')
 
 
 class ProxyCheckedSerializer(serializers.HyperlinkedModelSerializer):
-    site = serializers.ReadOnlyField(source='site.site')
+    domain = serializers.ReadOnlyField(source='domain.domain')
     proxy = ProxySerializer()
 
     class Meta:
         model = ProxyChecked
-        # fields = '__all__'
         exclude = ('url',)
+

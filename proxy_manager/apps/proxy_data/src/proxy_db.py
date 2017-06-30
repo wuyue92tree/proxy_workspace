@@ -11,7 +11,7 @@ class ProxyDataCheckdomain(Base):
 
     id = Column(Integer, primary_key=True)
     domain = Column(String(255), nullable=False)
-    description = Column(Text, nullable=False)
+    check_url = Column(Text, nullable=False)
     status = Column(Boolean, nullable=False)
     site_id = Column(ForeignKey(u'proxy_data_targetsite.id'), nullable=False,
                      index=True)
@@ -32,8 +32,8 @@ class ProxyDataProxy(Base):
     port = Column(String(255), nullable=False)
     io = Column(Integer, nullable=False)
     locate = Column(String(255), nullable=False)
-    level = Column(String(255), nullable=False)
-    type = Column(String(255), nullable=False)
+    level = Column(Integer, nullable=False)
+    type = Column(Integer, nullable=False)
     live_time = Column(String(255))
     dateline = Column(DateTime, nullable=False)
 
@@ -41,20 +41,20 @@ class ProxyDataProxy(Base):
 class ProxyDataProxychecked(Base):
     __tablename__ = 'proxy_data_proxychecked'
     __table_args__ = (
-        Index('proxy_data_proxychecked_site_id_proxy_id_1f80eb4a_uniq',
-              'site_id', 'proxy_id', unique=True),
+        Index('proxy_data_proxychecked_domain_id_proxy_id_ec88ab81_uniq',
+              'domain_id', 'proxy_id', unique=True),
     )
 
     id = Column(Integer, primary_key=True)
     connect_time = Column(String(20))
     check_time = Column(DateTime)
+    domain_id = Column(ForeignKey(u'proxy_data_checkdomain.id'),
+                       nullable=False, index=True)
     proxy_id = Column(ForeignKey(u'proxy_data_proxy.id'), nullable=False,
                       index=True)
-    site_id = Column(ForeignKey(u'proxy_data_targetsite.id'), nullable=False,
-                     index=True)
 
+    domain = relationship(u'ProxyDataCheckdomain')
     proxy = relationship(u'ProxyDataProxy')
-    site = relationship(u'ProxyDataTargetsite')
 
 
 class ProxyDataTargetsite(Base):

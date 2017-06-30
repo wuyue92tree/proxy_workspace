@@ -18,20 +18,25 @@ class ProxyAdmin(admin.ModelAdmin):
 
 @admin.register(CheckDomain)
 class CheckDomainAdmin(admin.ModelAdmin):
-    list_display = ('domain', 'site', 'description', 'status')
+    list_display = ('domain', 'site', 'check_url', 'status')
     list_filter = ('site__site_name', 'status')
+    search_fields = ('domain',)
 
 
 @admin.register(TargetSite)
 class TargetSiteAdmin(admin.ModelAdmin):
     list_display = ('site_name', 'description', 'status')
+    list_filter = ('site_name', 'status')
+    search_fields = ('site_name',)
 
 
 @admin.register(ProxyChecked)
 class ProxyChecked(admin.ModelAdmin):
-    list_display = ('site', 'proxy', 'get_io', 'get_level', 'get_type',
+    list_display = ('domain', 'proxy', 'get_io', 'get_level', 'get_type',
                     'connect_time', 'check_time')
-    list_filter = ('site__site_name', 'proxy__io', 'proxy__level', 'proxy__type')
+    list_filter = ('domain__domain', 'domain__site__site_name', 'proxy__io',
+                   'proxy__level',
+                   'proxy__type')
     search_fields = ('proxy__addr', 'proxy__port')
 
     def get_io(self, obj):
@@ -43,13 +48,21 @@ class ProxyChecked(admin.ModelAdmin):
     get_io.short_description = '国内/国外'
 
     def get_level(self, obj):
-        return u'%s' % obj.proxy.level
+        if obj.proxy.level == 1:
+            return u'透明'
+        else:
+            return u'高匿'
 
     get_level.admin_order_field = 'id'
     get_level.short_description = '级别'
 
     def get_type(self, obj):
-        return obj.proxy.type
+        if obj.proxy.type == 1:
+            return u'HTTP'
+        elif obj.proxy.type == 2:
+            return u'HTTPS'
+        else:
+            return u'HTTP/HTTPS'
 
     get_type.admin_order_field = 'id'
     get_type.short_description = '类型'

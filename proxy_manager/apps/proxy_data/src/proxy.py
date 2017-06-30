@@ -31,6 +31,23 @@ class ProxySpider(Spider):
         self.db = Database('sqlite:///../../../db.sqlite3',
                            encoding='utf-8')
         self.db.init_table()
+        self.q = RedisQueue('proxy_task', host=REDIS_HOST, port=REDIS_PORT,
+                            password=REDIS_PASSWORD)
+
+    def format_level(self, level):
+        if level == '透明':
+            return 1
+        elif level == '高匿':
+            return 2
+
+    def format_type(self, type):
+        if type.upper() == 'HTTP':
+            return 1
+        elif type.upper() == 'HTTPS':
+            return 2
+        else:
+            # type = 'HTTP/HTTPS'
+            return 3
 
     def crawler_xicidaili(self, target_url, io):
         try:
@@ -66,7 +83,9 @@ class ProxySpider(Spider):
                     locate = soup.find_all('td')[3].text.strip().encode(
                         'utf-8')
                     level = soup.find_all('td')[4].text.encode('utf-8')
+                    level = self.format_level(level)
                     type = soup.find_all('td')[5].text.encode('utf-8')
+                    type = self.format_type(type)
                     live_time = soup.find_all('td')[8].text.encode('utf-8')
                     dateline = datetime.datetime.now()
                     self.logger.info('%s\t%s\t%s\t%s\t%s\t%s\t%s'
@@ -77,7 +96,7 @@ class ProxySpider(Spider):
                         'addr': addr,
                         'port': port,
                         'locate': locate.decode('utf-8'),
-                        'level': level.decode('utf-8'),
+                        'level': level,
                         'type': type,
                         'io': io,
                         'live_time': live_time.decode('utf-8'),
@@ -91,7 +110,7 @@ class ProxySpider(Spider):
                 )
                 self.db.session.commit()
 
-            self.logger.info('crawler finish %s!!!' % url)
+            self.logger.info('crawler finish from xici!!!')
 
         except Exception as e:
             self.logger.exception('you got a error %s' % e)
@@ -126,7 +145,9 @@ class ProxySpider(Spider):
                         'utf-8')
                     level = soup.find_all('td')[2].text.encode('utf-8').strip(
                         '名')
+                    level = self.format_level(level)
                     type = soup.find_all('td')[3].text.encode('utf-8')
+                    type = self.format_type(type)
                     dateline = datetime.datetime.now()
                     self.logger.info('%s\t%s\t%s\t%s\t%s\t%s'
                                      % (addr, port, locate,
@@ -135,7 +156,7 @@ class ProxySpider(Spider):
                         'addr': addr,
                         'port': port,
                         'locate': locate.decode('utf-8'),
-                        'level': level.decode('utf-8'),
+                        'level': level,
                         'type': type,
                         'io': io,
                         'dateline': dateline,
@@ -148,80 +169,91 @@ class ProxySpider(Spider):
                 )
                 self.db.session.commit()
 
-            self.logger.info('crawler finish !!!')
+            self.logger.info('crawler finish from kuai!!!')
 
         except Exception as e:
             self.logger.exception('you got a error %s' % e)
 
-    # def check(self, q, site):
-    #     while True:
-    #         if q.empty():
-    #             print('check queue is Empty!!! have fun.')
-    #             exit()
-    #         site_id = site.id
-    #         url = site.site
-    #         proxy_id, addr, port, type = eval(q.get())
-    #         proxy = [addr + ':' + port]
-    #
-    #         try:
-    #             res = self.html_downloader.download(url, proxy=proxy)
-    #         except pycurl.error:
-    #             # self.logger.warning('%s: fail to access %s by %s %s'
-    #             #                     % (get_current_function_name(), url,
-    #             #                        proxy[0], q.qsize()))
-    #             continue
-    #         connect_time = float(res.http_conn_time)
-    #         connect_time = format(connect_time, '.6f')
-    #         check_time = datetime.datetime.now()
-    #         # print(check_time)
-    #         self.logger.info('%s\t%s\t%s\t%s'
-    #                          % (site_id, proxy[0], connect_time, q.qsize()))
-    #
-    #         item = ProxyProxychecked(proxy_id=proxy_id, site_id=site_id,
-    #                                  connect_time=connect_time,
-    #                                  check_time=check_time)
-    #         try:
-    #             self.db.session.add(item)
-    #             self.db.session.commit()
-    #         except:
-    #             update_ = {}
-    #             update_['connect_time'] = connect_time
-    #             update_['check_time'] = check_time
-    #             self.db.session.rollback()
-    #             self.db.session.query(ProxyProxychecked).filter_by(proxy_id=proxy_id, site_id=site_id).update(update_)
-    #             self.db.session.commit()
-    #
-    # def do_check(self):
-    #     process_list = []
-    #     sites = self.db.session.query(ProxyTargetsite).filter_by(status=1)
-    #     if not sites:
-    #         print('No active checking site found!\n')
-    #         exit()
-    #
-    #     for i in range(process_num):
-    #         for site in sites:
-    #             p = multiprocessing.Process(target=self.check,
-    #                                         args=(self.q_check(site.id), site))
-    #             process_list.append(p)
-    #             p.start()
-    #
-    #     for p in process_list:
-    #         p.join()
-    #
-    # def q_check(self, site_id):
-    #     res = self.db.session.query(ProxyProxy).all()
-    #
-    #     q = RedisQueue(
-    #         'proxy'+str(site_id),
-    #         host=REDIS_HOST,
-    #         port=REDIS_PORT,
-    #         password=REDIS_PASSWORD
-    #     )
-    #     if q.empty():
-    #         for i in res:
-    #             q.put((i.id, i.addr, i.port, i.type))
-    #
-    #     return q
+    def create_task(self):
+        try:
+            if not self.q.empty():
+                self.q.clean()
+                self.logger.info("清空任务队列.")
+
+            sites = self.db.session.query(ProxyDataTargetsite).filter_by(
+                status=True).all()
+
+            for site in sites:
+                domains = self.db.session.query(ProxyDataCheckdomain).filter_by(
+                    site_id=site.id, status=True)
+
+                for domain_item in domains:
+                    check_url = domain_item.check_url
+                    domain = domain_item.domain
+                    domain_id = domain_item.id
+
+                    proxys = self.db.session.query(ProxyDataProxy)
+                    for proxy_item in proxys:
+                        proxy_id = proxy_item.id
+                        proxy = proxy_item.addr + ':' + proxy_item.port
+                        self.q.put((domain_id, domain, check_url, proxy_id,
+                                    proxy))
+                        # print(domain_id, domain, check_url, proxy_id,
+                        #       proxy)
+            self.logger.info("总计生成%s个任务。" % self.q.qsize())
+
+        except Exception as e:
+            self.logger.exception(e)
+
+    def check(self):
+        while 1:
+            try:
+                if not self.q.empty():
+                    domain_id, domain, check_url, proxy_id, proxy = eval(
+                        self.q.get())
+                    proxies = {
+                        'http': 'http://%s' % proxy,
+                        'https': 'http://%s' % proxy,
+                    }
+
+                    try:
+                        res = self.html_downloader.download(check_url,
+                                                            proxies=proxies,
+                                                            timeout=5)
+                    except requests.RequestException:
+                        self.logger.warning("代理检测失败：domain->%s proxy->%s\t%s"
+                                            % (domain.encode('utf-8'),
+                                               proxy.encode('utf-8'),
+                                               self.q.qsize()))
+                        continue
+                    connect_time = res.elapsed.microseconds * 0.0000001
+                    check_time = datetime.datetime.now()
+                    # self.logger.info('%s\t%s\t%s\t%s\t%s'
+                    #                  % (domain_id, proxy_id, proxy,
+                    #                     connect_time,
+                    #                     self.q.qsize()))
+                    item = ProxyDataProxychecked(proxy_id=proxy_id,
+                                                 domain_id=domain_id,
+                                                 connect_time=connect_time,
+                                                 check_time=check_time)
+                    try:
+                        self.db.session.add(item)
+                        self.db.session.commit()
+                    except:
+                        update_ = {}
+                        update_['connect_time'] = connect_time
+                        update_['check_time'] = check_time
+                        self.db.session.rollback()
+                        self.db.session.query(ProxyDataProxychecked).filter_by(
+                            proxy_id=proxy_id, domain_id=domain_id).update(
+                            update_)
+                        self.db.session.commit()
+                    self.logger.info("代理检测成功: domain->%s proxy->%s\t%s"
+                                     % (domain.encode('utf-8'),
+                                        proxy.encode('utf-8'),
+                                        self.q.qsize()))
+            except Exception as e:
+                self.logger.exception(e)
 
     def run(self):
         try:
@@ -230,13 +262,13 @@ class ProxySpider(Spider):
             print('No worker found !\n')
             sys.exit()
 
-        if worker == 'xici':
+        if worker == 'get_xici':
             self.crawler_xicidaili('http://www.xicidaili.com/nn/', io=1)
             self.crawler_xicidaili('http://www.xicidaili.com/nt/', io=1)
             self.crawler_xicidaili('http://www.xicidaili.com/wn/', io=1)
             self.crawler_xicidaili('http://www.xicidaili.com/wt/', io=1)
 
-        elif worker == 'kuai':
+        elif worker == 'get_kuai':
             self.crawler_kuaidaili('http://www.kuaidaili.com/free/inha/', io=1)
             self.crawler_kuaidaili('http://www.kuaidaili.com/free/intr/', io=1)
             self.crawler_kuaidaili('http://www.kuaidaili.com/free/outha/',
@@ -244,8 +276,11 @@ class ProxySpider(Spider):
             self.crawler_kuaidaili('http://www.kuaidaili.com/free/outtr/',
                                    io=2)
 
-        # elif worker == 'check':
-        #     self.do_check()
+        elif worker == 'create_task':
+            self.create_task()
+
+        elif worker == 'check':
+            self.check()
 
         else:
             print('"%s" is not a valid worker!' % worker)
